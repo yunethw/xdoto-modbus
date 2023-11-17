@@ -6,15 +6,15 @@ import (
 )
 
 type Endianness uint
-type WordOrder	uint
+type ByteOrder	uint
 const (
 	// endianness of 16-bit registers
 	BIG_ENDIAN          Endianness = 1
 	LITTLE_ENDIAN       Endianness = 2
 
-	// word order of 32-bit registers
-	HIGH_WORD_FIRST     WordOrder = 1
-	LOW_WORD_FIRST      WordOrder = 2
+	// byte order of 32-bit registers
+	HIGH_BYTE_FIRST     ByteOrder = 1
+	LOW_BYTE_FIRST      ByteOrder = 2
 )
 
 func Uint16ToBytes(endianness Endianness, in uint16) (out []byte) {
@@ -52,24 +52,24 @@ func BytesToUint16s(endianness Endianness, in []byte) (out []uint16) {
 	return
 }
 
-func BytesToUint32s(endianness Endianness, wordOrder WordOrder, in []byte) (out []uint32) {
+func BytesToUint32s(endianness Endianness, byteOrder ByteOrder, in []byte) (out []uint32) {
 	var u32		uint32
 
 	for i := 0; i < len(in); i += 4 {
 		switch endianness {
 		case BIG_ENDIAN:
-			if wordOrder == HIGH_WORD_FIRST {
+			if byteOrder == HIGH_BYTE_FIRST {
 				u32 = binary.BigEndian.Uint32(in[i:i+4])
 			} else {
 				u32 = binary.BigEndian.Uint32(
-					[]byte{in[i+2], in[i+3], in[i+0], in[i+1]})
+					[]byte{in[i+1], in[i+0], in[i+3], in[i+2]})
 			}
 		case LITTLE_ENDIAN:
-			if wordOrder == LOW_WORD_FIRST {
+			if byteOrder == LOW_BYTE_FIRST {
 				u32 = binary.LittleEndian.Uint32(in[i:i+4])
 			} else {
 				u32 = binary.LittleEndian.Uint32(
-					[]byte{in[i+2], in[i+3], in[i+0], in[i+1]})
+					[]byte{in[i+1], in[i+0], in[i+3], in[i+2]})
 			}
 		}
 
@@ -79,7 +79,7 @@ func BytesToUint32s(endianness Endianness, wordOrder WordOrder, in []byte) (out 
 	return
 }
 
-func Uint32ToBytes(endianness Endianness, wordOrder WordOrder, in uint32) (out []byte) {
+func Uint32ToBytes(endianness Endianness, byteOrder ByteOrder, in uint32) (out []byte) {
 	out = make([]byte, 4)
 
 	switch endianness {
@@ -87,14 +87,14 @@ func Uint32ToBytes(endianness Endianness, wordOrder WordOrder, in uint32) (out [
 		binary.BigEndian.PutUint32(out, in)
 
 		// swap words if needed
-		if wordOrder == LOW_WORD_FIRST {
+		if byteOrder == LOW_BYTE_FIRST {
 			out[0], out[1], out[2], out[3] = out[2], out[3], out[0], out[1]
 		}
 	case LITTLE_ENDIAN:
 		binary.LittleEndian.PutUint32(out, in)
 
 		// swap words if needed
-		if wordOrder == HIGH_WORD_FIRST {
+		if byteOrder == HIGH_BYTE_FIRST {
 			out[0], out[1], out[2], out[3] = out[2], out[3], out[0], out[1]
 		}
 	}
@@ -102,9 +102,9 @@ func Uint32ToBytes(endianness Endianness, wordOrder WordOrder, in uint32) (out [
 	return
 }
 
-func BytesToFloat32s(endianness Endianness, wordOrder WordOrder, in []byte) (out []float32) {
+func BytesToFloat32s(endianness Endianness, byteOrder ByteOrder, in []byte) (out []float32) {
 
-	u32s := BytesToUint32s(endianness, wordOrder, in)
+	u32s := BytesToUint32s(endianness, byteOrder, in)
 
 	for _, u32 := range u32s {
 		out = append(out, math.Float32frombits(u32))
@@ -113,19 +113,19 @@ func BytesToFloat32s(endianness Endianness, wordOrder WordOrder, in []byte) (out
 	return
 }
 
-func Float32ToBytes(endianness Endianness, wordOrder WordOrder, in float32) (out []byte) {
-	out = Uint32ToBytes(endianness, wordOrder, math.Float32bits(in))
+func Float32ToBytes(endianness Endianness, byteOrder ByteOrder, in float32) (out []byte) {
+	out = Uint32ToBytes(endianness, byteOrder, math.Float32bits(in))
 
 	return
 }
 
-func BytesToUint64s(endianness Endianness, wordOrder WordOrder, in []byte) (out []uint64) {
+func BytesToUint64s(endianness Endianness, byteOrder ByteOrder, in []byte) (out []uint64) {
 	var u64 uint64
 
 	for i := 0; i < len(in); i += 8 {
 		switch endianness {
 		case BIG_ENDIAN:
-			if wordOrder == HIGH_WORD_FIRST {
+			if byteOrder == HIGH_BYTE_FIRST {
 				u64 = binary.BigEndian.Uint64(in[i:i+8])
 			} else {
 				u64 = binary.BigEndian.Uint64(
@@ -133,7 +133,7 @@ func BytesToUint64s(endianness Endianness, wordOrder WordOrder, in []byte) (out 
 					       in[i+2], in[i+3], in[i+0], in[i+1]})
 			}
 		case LITTLE_ENDIAN:
-			if wordOrder == LOW_WORD_FIRST {
+			if byteOrder == LOW_BYTE_FIRST {
 				u64 = binary.LittleEndian.Uint64(in[i:i+8])
 			} else {
 				u64 = binary.LittleEndian.Uint64(
@@ -148,7 +148,7 @@ func BytesToUint64s(endianness Endianness, wordOrder WordOrder, in []byte) (out 
 	return
 }
 
-func Uint64ToBytes(endianness Endianness, wordOrder WordOrder, in uint64) (out []byte) {
+func Uint64ToBytes(endianness Endianness, byteOrder ByteOrder, in uint64) (out []byte) {
 	out = make([]byte, 8)
 
 	switch endianness {
@@ -156,7 +156,7 @@ func Uint64ToBytes(endianness Endianness, wordOrder WordOrder, in uint64) (out [
 		binary.BigEndian.PutUint64(out, in)
 
 		// swap words if needed
-		if wordOrder == LOW_WORD_FIRST {
+		if byteOrder == LOW_BYTE_FIRST {
 			out[0], out[1], out[2], out[3],out[4], out[5], out[6], out[7] =
 				out[6], out[7], out[4], out[5], out[2], out[3], out[0], out[1]
 		}
@@ -164,7 +164,7 @@ func Uint64ToBytes(endianness Endianness, wordOrder WordOrder, in uint64) (out [
 		binary.LittleEndian.PutUint64(out, in)
 
 		// swap words if needed
-		if wordOrder == HIGH_WORD_FIRST {
+		if byteOrder == HIGH_BYTE_FIRST {
 			out[0], out[1], out[2], out[3],out[4], out[5], out[6], out[7] =
 				out[6], out[7], out[4], out[5], out[2], out[3], out[0], out[1]
 		}
@@ -173,8 +173,8 @@ func Uint64ToBytes(endianness Endianness, wordOrder WordOrder, in uint64) (out [
 	return
 }
 
-func BytesToFloat64s(endianness Endianness, wordOrder WordOrder, in []byte) (out []float64) {
-	u64s := BytesToUint64s(endianness, wordOrder, in)
+func BytesToFloat64s(endianness Endianness, byteOrder ByteOrder, in []byte) (out []float64) {
+	u64s := BytesToUint64s(endianness, byteOrder, in)
 
 	for _, u64 := range u64s {
 		out = append(out, math.Float64frombits(u64))
@@ -183,8 +183,8 @@ func BytesToFloat64s(endianness Endianness, wordOrder WordOrder, in []byte) (out
 	return
 }
 
-func Float64ToBytes(endianness Endianness, wordOrder WordOrder, in float64) (out []byte) {
-	out = Uint64ToBytes(endianness, wordOrder, math.Float64bits(in))
+func Float64ToBytes(endianness Endianness, byteOrder ByteOrder, in float64) (out []byte) {
+	out = Uint64ToBytes(endianness, byteOrder, math.Float64bits(in))
 
 	return
 }
